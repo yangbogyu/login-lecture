@@ -10,9 +10,6 @@ dotenv.config();
 //라우팅
 const home = require("./src/routes/home");
 
-const logger = require("./src/config/logger");
-logger.info("test");
-
 // app 세팅
 app.set("views", "./src/views");
 app.set("view engine", "ejs");

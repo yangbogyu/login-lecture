@@ -1,83 +1,46 @@
-const winston = require('winston');
-const WinstonDaily = require('winston-daily-rotate-file');
-const path = require('path');
+const {createLogger, transports, format} = require("winston");
+require('winston-daily-rotate-file');
+const {combine, timestamp, colorize, simple, printf, label} = format;
 
-const { combine, timestamp, printf, colorize } = winston.format;
-
-const logDir = 'logs';
-
-const levels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  debug: 4,
-}
-
-const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'blue',
-}
-winston.addColors(colors);
-
-const level = () => {
-  const env = process.env.NODE_ENV || 'development';
-  const isDevelopment = env === 'development';
-  return isDevelopment ? 'debug' : 'http';
-}
-
-// Log Format
-const logFormat = combine(
-  timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  printf((info) => {
-    if (info.stack) {
-      return `${info.timestamp} ${info.level}: ${info.message} \n Error Stack: ${info.stack}`;
-    }
-    return `${info.timestamp} ${info.level}: ${info.message}`;
-  })
-);
-
-// 콘솔에 찍힐 때는 색깔을 구변해서 로깅해주자.
-const consoleOpts = {
-  handleExceptions: true,
-  level: process.env.NODE_ENV === 'production' ? 'error' : 'debug',
-  format: combine(
-    colorize({ all: true }),
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' })
-  )
-}
-
-const transports = [
-  // 콘솔로그찍을 때만 색넣자.
-  new winston.transports.Console(consoleOpts),
-  // error 레벨 로그를 저장할 파일 설정
-  new WinstonDaily({
-    level: 'error',
-    datePattern: 'YYYY-MM-DD',
-    dirname: path.join(__dirname, logDir, '/error'),
-    filename: '%DATE%.error.log',
-    maxFiles: 30,
-    zippedArchive: true
-  }),
-  // 모든 레벨 로그를 저장할 파일 설정
-  new WinstonDaily({
-    level: 'debug',
-    datePattern: 'YYYY-MM-DD',
-    dirname: path.join(__dirname, logDir, '/all'),
-    filename: '%DATE%.all.log',
-    maxFiles: 7,
-    zippedArchive: true
-  })
-]
-
-const Logger = winston.createLogger({
-  level: level(),
-  levels,
-  format: logFormat,
-  transports
+// 로그 포멧 지정
+const printFormat = printf(({timestamp, label, level, message}) =>{
+    return `${timestamp} [${label}] ${level} : ${message}`;
 })
 
-module.exports = Logger;
+const printLogFormat = {
+    file :combine(
+    label({
+        label:"백엔드 공부",
+    }),
+    //colorize(),
+    timestamp({
+        format : "YYYY-MM-DD HH:mm:dd",
+    }),
+    printFormat,
+    ),
+    console : combine(
+        colorize(),
+        simple()
+        ),
+}
+
+// 옵션 지정
+const opts = {
+    file : new transports.File({
+        filename : "access.log",
+        dirname : "./logs",
+        level : "info",
+        format : printLogFormat.file, 
+    }),
+    console : new transports.Console({
+        level : "info",
+        format : printLogFormat.console, 
+    }),
+}
+const logger = createLogger({
+    transports:[opts.file],
+});
+if (process.env.NODE_ENV !== 'production'){
+    logger.add(opts.console);
+}
+module.exports = logger;

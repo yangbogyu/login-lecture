@@ -1,5 +1,6 @@
 "use strict";
 
+const Logger = require("../config/logger");
 const UserStorage = require("./UserStorage");
 
 class User{
@@ -11,6 +12,7 @@ class User{
         const client = this.body;
         try{
             const {id, psword} = await UserStorage.getUserInfo(client.id);
+            Logger.info(1123+id);
             if(id) {
                 if(id === client.id && psword === client.psword){
                     return {success : true};
@@ -19,7 +21,7 @@ class User{
             }
             return {success : false, msg:"아이디가 없습니다."};
         } catch(err){
-            return {success : false, msg : err};
+            return {success : false, err:`${err}`};
         }
          
     }
@@ -30,7 +32,7 @@ class User{
             const response = await UserStorage.save(client);
             return response;
         }catch(err){
-            return {success : false, msg: err};
+            return {success : false, err:`${err}`};
         }
     }
 }
