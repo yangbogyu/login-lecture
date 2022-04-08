@@ -12,7 +12,6 @@ class User{
         const client = this.body;
         try{
             const {id, psword} = await UserStorage.getUserInfo(client.id);
-            Logger.info(1123+id);
             if(id) {
                 if(id === client.id && psword === client.psword){
                     return {success : true};
