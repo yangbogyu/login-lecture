@@ -1,11 +1,15 @@
 "use strict";
 
+
 //인터페이스 역활 DOM 
 const id = document.querySelector("#id"),
     psword = document.querySelector("#psword"),
     loginBtn = document.querySelector("#button");
 
 loginBtn.addEventListener("click", login);
+
+
+
 
 function login(){
     if (!id.value) return alert("아이디 입력해랑");
